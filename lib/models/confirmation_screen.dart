@@ -1,9 +1,12 @@
+// lib/models/confirmation_screen.dart
 import 'package:flutter/material.dart';
-import 'cart.dart';
+import '../models/cart.dart';
+import '../screens/receipt_screen.dart'; // 영수증 화면 import
+import '../theme/colors.dart';
 
 class ConfirmationScreen extends StatefulWidget {
   final List<CartItem> cart;
-  final Function onOrderConfirmed; // 주문 확정 시 호출될 콜백 함수
+  final Function onOrderConfirmed;
 
   const ConfirmationScreen({
     super.key,
@@ -16,7 +19,6 @@ class ConfirmationScreen extends StatefulWidget {
 }
 
 class _ConfirmationScreenState extends State<ConfirmationScreen> {
-  // 총액 계산
   int get _totalPrice {
     return widget.cart.fold(0, (sum, item) => sum + item.totalPrice);
   }
@@ -25,12 +27,11 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('주문 확인'),
-        backgroundColor: const Color(0xFF2C2C2C),
+        title: const Text('주문 확인', style: TextStyle(color: Colors.white)),
+        backgroundColor: primaryColor,
       ),
       body: Column(
         children: [
-          // 주문 목록
           Expanded(
             child: ListView.builder(
               itemCount: widget.cart.length,
@@ -57,7 +58,6 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
             ),
           ),
           const Divider(height: 1, thickness: 2),
-          // 최종 결제 정보 및 버튼
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
@@ -72,13 +72,14 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
+                    backgroundColor: accentColor,
+                    foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 40,
                       vertical: 20,
                     ),
                   ),
-                  onPressed: _showPaymentDialog, // 결제창 띄우기
+                  onPressed: _showPaymentDialog,
                   child: const Text('결제하기', style: TextStyle(fontSize: 18)),
                 ),
               ],
@@ -89,7 +90,6 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
     );
   }
 
-  // 결제 방식 선택 다이얼로그
   void _showPaymentDialog() {
     showDialog(
       context: context,
@@ -100,10 +100,12 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
+              leading: const Icon(Icons.credit_card),
               title: const Text('카드 결제'),
               onTap: () => _processOrder(context),
             ),
             ListTile(
+              leading: const Icon(Icons.qr_code),
               title: const Text('페이 결제'),
               onTap: () => _processOrder(context),
             ),
@@ -113,28 +115,17 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
     );
   }
 
-  // 주문 처리 및 완료창 표시
+  // 주문 처리 및 영수증 화면으로 이동하도록 수정
   void _processOrder(BuildContext dialogContext) {
     Navigator.of(dialogContext).pop(); // 결제창 닫기
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('주문 완료'),
-        content: const Text('주문이 성공적으로 완료되었습니다.'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              // 1. 주문 완료창 닫기
-              Navigator.of(context).pop();
-              // 2. 주문 확인 화면 닫고 메인 화면으로 돌아가기
-              Navigator.of(context).pop();
-              // 3. 메인 화면의 장바구니 비우기 (콜백 함수 호출)
-              widget.onOrderConfirmed();
-            },
-            child: const Text('확인'),
-          ),
-        ],
+    widget.onOrderConfirmed(); // 메인 화면의 장바구니 비우기
+
+    Navigator.pushReplacement(
+      // 현재 화면을 영수증 화면으로 교체
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            ReceiptScreen(cart: widget.cart, totalPrice: _totalPrice),
       ),
     );
   }
