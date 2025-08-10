@@ -1,106 +1,76 @@
 // lib/screens/kiosk_screen.dart
-import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import '../data/mock_data.dart';
 import '../models/cart.dart';
-import '../models/challenge.dart';
-import '../models/product.dart';
 import '../theme/colors.dart';
 import '../widgets/cart_panel.dart';
 import '../models/confirmation_screen.dart';
-import 'home.dart';
+
+class Challenge {
+  final String description; // Challenge 설명
+  // Challenge에 필요한 아이템의 ID와 개수를 나타내는 맵
+  final Map<int, int> requiredItems; // 아이템 ID와 개수
+
+  Challenge({required this.description, required this.requiredItems});
+}
+
+class Product {
+  final int id;
+  final int categoryId;
+  final String name;
+  final String description;
+  final int price;
+  final String imagePath;
+
+  Product({
+    required this.id,
+    required this.categoryId,
+    required this.name,
+    required this.description,
+    required this.price,
+    required this.imagePath,
+  });
+}
 
 class OrderScreen extends StatefulWidget {
-  final KioskMode mode;
-  const OrderScreen({super.key, required this.mode});
+  const OrderScreen({super.key});
   @override
   State<OrderScreen> createState() => _OrderScreenState();
 }
 
 class _OrderScreenState extends State<OrderScreen> {
-  final FlutterTts _flutterTts = FlutterTts();
+  // --- 상태 변수 ---
   final List<CartItem> _cart = [];
   int _selectedCategoryId = 0;
   List<Product> _displayedProducts = [];
-  String _guideMessage = '';
-  Challenge? _currentChallenge;
-  int _practiceStep = 0;
-  final List<String> _practiceGuides = [
-    "먼저, 왼쪽에서 원하시는 '카테고리'를 선택해보세요.",
-    "좋아요! 원하는 만큼 메뉴를 담고 '주문하기'를 눌러보세요.",
-    "모든 연습이 끝났습니다. 실제 키오스크에서도 자신감을 가지세요!",
-  ];
+
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _initializeTts();
-    if (widget.mode == KioskMode.practice) {
-      _practiceStep = 0;
-      _guideMessage = _practiceGuides[_practiceStep];
-      _speak(_guideMessage);
-    } else {
-      _currentChallenge = _generateRandomChallenge();
-      if (_currentChallenge != null) _speak(_currentChallenge!.description);
-    }
-    _updateDisplayedProducts();
+    _updateDisplayedProducts(); // 앱 시작 시 전체 메뉴를 보여줍니다.
   }
 
-  @override
-  void dispose() {
-    _flutterTts.stop();
-    super.dispose();
-  }
-
-  void _initializeTts() async {
-    await _flutterTts.setLanguage("ko-KR");
-    await _flutterTts.setSpeechRate(0.5);
-  }
-
-  Future<void> _speak(String text) async {
-    await _flutterTts.stop();
-    await _flutterTts.speak(text);
-  }
-
-  Challenge _generateRandomChallenge() {
-    final random = Random();
-    int itemCount = random.nextInt(2) + 2;
-    Map<int, int> requiredItems = {};
-    String description = "미션: ";
-    List<Product> shuffledProducts = List.from(mockProducts)..shuffle();
-    for (int i = 0; i < itemCount; i++) {
-      Product product = shuffledProducts[i];
-      int quantity = random.nextInt(2) + 1;
-      requiredItems[product.id] = quantity;
-      description += "${product.name} ${quantity}개";
-      if (i < itemCount - 1) {
-        description += ", ";
-      }
-    }
-    description += "를 주문하세요.";
-    return Challenge(description: description, requiredItems: requiredItems);
-  }
-
+  // --- 로직 함수 ---
   void _updateDisplayedProducts() {
     setState(() {
-      if (_selectedCategoryId == 0)
+      if (_selectedCategoryId == 0) {
         _displayedProducts = mockProducts;
-      else
+      } else {
         _displayedProducts = mockProducts
             .where((p) => p.categoryId == _selectedCategoryId)
             .toList();
+      }
     });
   }
 
-  void _addToCart(Product product) {
+  void _addToCart(Product product) async {
+    await Future.delayed(
+      const Duration(milliseconds: 500),
+    ); // 애니메이션 효과를 위해 약간의 지연 추가
+
     setState(() {
-      _speak("${product.name}을 장바구니에 담았습니다.");
-      if (widget.mode == KioskMode.practice && _practiceStep == 0) {
-        _practiceStep++;
-        _guideMessage = _practiceGuides[_practiceStep];
-        _speak(_guideMessage);
-      }
       for (var item in _cart) {
         if (item.product.id == product.id) {
           item.quantity++;
@@ -114,66 +84,30 @@ class _OrderScreenState extends State<OrderScreen> {
   void _updateCartItem(CartItem cartItem, int change) {
     setState(() {
       cartItem.quantity += change;
-      if (cartItem.quantity <= 0) _cart.remove(cartItem);
+      if (cartItem.quantity <= 0) {
+        _cart.remove(cartItem);
+      }
     });
   }
 
   void _clearCart() {
+    setState(() => _cart.clear());
+  }
+
+  void _navigateToConfirmation() async {
     setState(() {
-      _cart.clear();
-      _speak("장바구니를 모두 비웠습니다.");
+      _isLoading = true; // 로딩 시작
     });
-  }
 
-  String _validateChallenge() {
-    if (_currentChallenge == null) return "문제가 설정되지 않았습니다.";
-    if (_cart.length != _currentChallenge!.requiredItems.length)
-      return "주문하신 메뉴의 종류가 미션과 다릅니다.";
+    await Future.delayed(const Duration(milliseconds: 500)); // 1초 대기
 
-    for (var cartItem in _cart) {
-      int productId = cartItem.product.id;
-      if (!_currentChallenge!.requiredItems.containsKey(productId))
-        return "${cartItem.product.name}은(는) 미션에 없는 메뉴입니다.";
-      if (_currentChallenge!.requiredItems[productId] != cartItem.quantity)
-        return "${cartItem.product.name}의 수량이 미션과 다릅니다.";
-    }
-    return "";
-  }
+    setState(() {
+      _isLoading = false; // 로딩 종료
+    });
 
-  void _processCheckout() {
-    if (widget.mode == KioskMode.challenge) {
-      String validationResult = _validateChallenge();
-      if (validationResult.isEmpty) {
-        _speak("미션 성공! 주문을 확인해주세요.");
-        _navigateToConfirmation();
-      } else {
-        _speak("미션 실패. $validationResult");
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('미션 실패'),
-            content: Text(validationResult),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('확인'),
-              ),
-            ],
-          ),
-        );
-      }
-    } else {
-      _speak("주문 내용을 확인해주세요.");
-      _navigateToConfirmation();
-    }
-  }
+    // mounted 체크
+    if (!mounted) return;
 
-  void _navigateToConfirmation() {
-    if (widget.mode == KioskMode.practice) {
-      _practiceStep++;
-      if (_practiceStep < _practiceGuides.length)
-        _guideMessage = _practiceGuides[_practiceStep];
-    }
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -183,18 +117,52 @@ class _OrderScreenState extends State<OrderScreen> {
     );
   }
 
+  // [추가] 도움말 팝업창을 보여주는 함수
+  void _showHelpDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('키오스크 사용법 안내'),
+        content: const SingleChildScrollView(
+          child: Text(
+            "1. 왼쪽 '카테고리' 목록에서 원하는 메뉴 종류를 선택하세요.\n\n"
+            "2. 화면에 나타난 '메뉴'를 터치하여 장바구니에 담으세요.\n\n"
+            "3. 오른쪽 '장바구니'에서 담은 메뉴와 수량을 확인하세요. (+/- 버튼으로 수량 조절, 전체 비우기도 가능합니다.)\n\n"
+            "4. 주문할 준비가 되면 '주문하기' 버튼을 누르세요.\n\n"
+            "5. '주문 확인' 화면에서 최종 내역을 확인하고 '결제하기'를 누르면 완료됩니다.",
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- UI 구현 ---
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: Text(
-          widget.mode == KioskMode.practice ? '연습 모드' : '실전 문제',
-          style: const TextStyle(color: Colors.white),
+        title: const Text(
+          '테이블 오더',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: primaryColor,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline, color: Colors.white),
+            onPressed: _showHelpDialog,
+            tooltip: '도움말 보기',
+          ),
+        ],
       ),
+      // [수정] 기존 UI 위에 로딩 스피너를 겹쳐서 표시하기 위해 Stack 사용
       body: Stack(
         children: [
           Row(
@@ -217,39 +185,21 @@ class _OrderScreenState extends State<OrderScreen> {
                   cart: _cart,
                   onUpdateItem: _updateCartItem,
                   onClearCart: _clearCart,
-                  onCheckout: _processCheckout,
+                  onCheckout: _navigateToConfirmation,
                 ),
               ),
             ],
           ),
-          _buildTopBanner(),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildTopBanner() {
-    String bannerText = '';
-    if (widget.mode == KioskMode.practice)
-      bannerText = _guideMessage;
-    else if (_currentChallenge != null)
-      bannerText = _currentChallenge!.description;
-    return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      child: Container(
-        padding: const EdgeInsets.all(12.0),
-        color: primaryColor.withAlpha(204),
-        child: Text(
-          bannerText,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+          // [추가] _isLoading이 true일 때만 로딩 화면을 보여줌
+          if (_isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.5),
+              child: const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -258,129 +208,117 @@ class _OrderScreenState extends State<OrderScreen> {
     return Container(
       width: 160,
       color: Colors.white,
-      child: Column(
-        children: [
-          const SizedBox(height: 50),
-          Expanded(
-            child: ListView.builder(
-              itemCount: mockCategories.length,
-              itemBuilder: (context, index) {
-                final category = mockCategories[index];
-                final isSelected = category['id'] == _selectedCategoryId;
-                return Material(
-                  color: isSelected
-                      ? accentColor.withAlpha(26)
-                      : Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      _speak("${category['name']} 카테고리를 선택했습니다.");
-                      setState(() {
-                        _selectedCategoryId = category['id'];
-                        _updateDisplayedProducts();
-                        if (widget.mode == KioskMode.practice &&
-                            _practiceStep == 0) {
-                          _practiceStep++;
-                          _guideMessage = _practiceGuides[_practiceStep];
-                          _speak(_guideMessage);
-                        }
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 16.0,
-                        horizontal: 12.0,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          left: BorderSide(
-                            color: isSelected
-                                ? accentColor
-                                : Colors.transparent,
-                            width: 4,
-                          ),
-                        ),
-                      ),
-                      child: Text(
-                        category['name']!,
-                        style: TextStyle(
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          color: textColor,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProductGrid() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 50.0),
-      child: GridView.builder(
-        padding: const EdgeInsets.all(16.0),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16.0,
-          mainAxisSpacing: 16.0,
-          childAspectRatio: 0.8,
-        ),
-        itemCount: _displayedProducts.length,
+      child: ListView.builder(
+        itemCount: mockCategories.length,
         itemBuilder: (context, index) {
-          final product = _displayedProducts[index];
-          return InkWell(
-            onTap: () => _addToCart(product),
-            child: Card(
-              clipBehavior: Clip.antiAlias,
-              elevation: 2.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: Image.asset(
-                      product.imagePath,
-                      fit: BoxFit.cover,
-                      errorBuilder: (c, e, s) => const Center(
-                        child: Icon(Icons.error, color: Colors.grey),
-                      ),
+          final category = mockCategories[index];
+          final isSelected = category['id'] == _selectedCategoryId;
+          return Material(
+            color: isSelected ? accentColor.withAlpha(26) : Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  _selectedCategoryId = category['id'];
+                  _updateDisplayedProducts();
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16.0,
+                  horizontal: 12.0,
+                ),
+                decoration: BoxDecoration(
+                  border: Border(
+                    left: BorderSide(
+                      color: isSelected ? accentColor : Colors.transparent,
+                      width: 4,
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      product.name,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
+                ),
+                child: Text(
+                  category['name']!,
+                  style: TextStyle(
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    color: textColor,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Text(
-                      '${product.price}원',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildProductGrid() {
+    // [수정] 화면 너비에 따라 한 줄에 표시할 아이템 개수를 동적으로 계산
+    final screenWidth = MediaQuery.of(context).size.width;
+    // 메뉴판 영역은 전체 너비의 약 50% (flex: 3), 장바구니 영역(flex: 2)을 제외한 나머지
+    final gridWidth = screenWidth * 3 / 5;
+    final crossAxisCount = (gridWidth / 220).floor().clamp(
+      2,
+      4,
+    ); // 아이템 하나의 최소 너비를 220으로 가정하여 계산, 최소 2개 최대 4개
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(16.0),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount, // 동적으로 계산된 값 사용
+        crossAxisSpacing: 16.0,
+        mainAxisSpacing: 16.0,
+        childAspectRatio: 0.8,
+      ),
+      itemCount: _displayedProducts.length,
+      itemBuilder: (context, index) {
+        final product = _displayedProducts[index];
+        return InkWell(
+          onTap: () => _addToCart(product),
+          child: Card(
+            clipBehavior: Clip.antiAlias,
+            elevation: 2.0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: Image.asset(
+                    product.imagePath,
+                    fit: BoxFit.cover,
+                    errorBuilder: (c, e, s) => const Center(
+                      child: Icon(Icons.error, color: Colors.grey),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    product.name,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: Text(
+                    '${product.price}원',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

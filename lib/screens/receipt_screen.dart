@@ -6,11 +6,13 @@ import '../theme/colors.dart';
 class ReceiptScreen extends StatelessWidget {
   final List<CartItem> cart;
   final int totalPrice;
+  final Function onConfirmed;
 
   const ReceiptScreen({
     super.key,
     required this.cart,
     required this.totalPrice,
+    required this.onConfirmed,
   });
 
   @override
@@ -42,8 +44,9 @@ class ReceiptScreen extends StatelessWidget {
               const SizedBox(height: 8),
               Text(DateTime.now().toString().substring(0, 16)),
               const Divider(height: 32),
-              Expanded(
+              Flexible(
                 child: ListView.builder(
+                  shrinkWrap: true,
                   itemCount: cart.length,
                   itemBuilder: (context, index) {
                     final item = cart[index];
@@ -91,6 +94,7 @@ class ReceiptScreen extends StatelessWidget {
                     foregroundColor: Colors.white,
                   ),
                   onPressed: () {
+                    onConfirmed();
                     Navigator.of(context).popUntil((route) => route.isFirst);
                   },
                   child: const Text('확인'),

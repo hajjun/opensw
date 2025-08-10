@@ -1,5 +1,4 @@
-// lib/data/mock_data.dart
-import '../models/product.dart';
+import '../screens/kiosk_screen.dart';
 
 // 카테고리 목록 데이터
 final List<Map<String, dynamic>> mockCategories = [
@@ -20,7 +19,7 @@ final List<Product> mockProducts = [
     name: 'BBQ리코타 2~3인 세트',
     description: '바비큐 플래터와 리코타 샐러드',
     price: 65000,
-    imagePath: 'assets/images/set_bbq.png',
+    imagePath: 'images/set_bbq.png',
   ),
   Product(
     id: 2,
@@ -28,7 +27,7 @@ final List<Product> mockProducts = [
     name: '안심 스테이크 2인 세트',
     description: '최고급 안심과 파스타',
     price: 54000,
-    imagePath: 'assets/images/set_steak.png',
+    imagePath: 'images/set_steak.png',
   ),
   Product(
     id: 3,
@@ -36,7 +35,7 @@ final List<Product> mockProducts = [
     name: '바비큐 폭립 피자 파티',
     description: '폭립, 피자, 감자튀김 구성',
     price: 80000,
-    imagePath: 'assets/images/set_pizza.png',
+    imagePath: 'images/set_pizza.png',
   ),
   Product(
     id: 4,
@@ -44,7 +43,7 @@ final List<Product> mockProducts = [
     name: '립아이 스테이크',
     description: '육즙 가득한 등심 스테이크',
     price: 32000,
-    imagePath: 'assets/images/steak_ribeye.png',
+    imagePath: 'images/steak_ribeye.png',
   ),
   Product(
     id: 5,
@@ -52,7 +51,7 @@ final List<Product> mockProducts = [
     name: '안심 스테이크',
     description: '부드러운 안심 스테이크',
     price: 35000,
-    imagePath: 'assets/images/steak_tenderloin.png',
+    imagePath: 'images/steak_tenderloin.png',
   ),
   Product(
     id: 6,
@@ -60,7 +59,7 @@ final List<Product> mockProducts = [
     name: '치킨 스테이크',
     description: '담백한 닭가슴살 스테이크',
     price: 28000,
-    imagePath: 'assets/images/steak_chicken.png',
+    imagePath: 'images/steak_chicken.png',
   ),
   Product(
     id: 7,
@@ -68,7 +67,7 @@ final List<Product> mockProducts = [
     name: '까르보나라',
     description: '베이컨과 크림소스의 조화',
     price: 18000,
-    imagePath: 'assets/images/pasta_carbonara.png',
+    imagePath: 'images/pasta_carbonara.png',
   ),
   Product(
     id: 8,
@@ -76,7 +75,7 @@ final List<Product> mockProducts = [
     name: '새우 필라프',
     description: '통통한 새우가 들어간 볶음밥',
     price: 19000,
-    imagePath: 'assets/images/rice_pilaf.png',
+    imagePath: 'images/rice_pilaf.png',
   ),
   Product(
     id: 9,
@@ -84,7 +83,7 @@ final List<Product> mockProducts = [
     name: '토마토 해산물 파스타',
     description: '신선한 해산물이 가득',
     price: 21000,
-    imagePath: 'assets/images/pasta_seafood.png',
+    imagePath: 'images/pasta_seafood.png',
   ),
   Product(
     id: 10,
@@ -92,7 +91,7 @@ final List<Product> mockProducts = [
     name: '마르게리타 피자',
     description: '토마토와 바질, 모짜렐라 치즈',
     price: 22000,
-    imagePath: 'assets/images/pizza_margherita.png',
+    imagePath: 'images/pizza_margherita.png',
   ),
   Product(
     id: 11,
@@ -100,7 +99,7 @@ final List<Product> mockProducts = [
     name: '고르곤졸라 피자',
     description: '꿀에 찍어먹는 치즈 피자',
     price: 24000,
-    imagePath: 'assets/images/pizza_gorgonzola.png',
+    imagePath: 'images/pizza_gorgonzola.png',
   ),
   Product(
     id: 12,
@@ -108,7 +107,7 @@ final List<Product> mockProducts = [
     name: '페퍼로니 피자',
     description: '짭짤한 페퍼로니가 듬뿍',
     price: 23000,
-    imagePath: 'assets/images/pizza_pepperoni.png',
+    imagePath: 'images/pizza_pepperoni.png',
   ),
   Product(
     id: 13,
@@ -116,7 +115,7 @@ final List<Product> mockProducts = [
     name: '시저 샐러드',
     description: '신선한 로메인과 시저 드레싱',
     price: 12000,
-    imagePath: 'assets/images/side_caesar.png',
+    imagePath: 'images/side_caesar.png',
   ),
   Product(
     id: 14,
@@ -124,7 +123,7 @@ final List<Product> mockProducts = [
     name: '감자튀김',
     description: '바삭하게 튀긴 프렌치 프라이',
     price: 6000,
-    imagePath: 'assets/images/side_fries.png',
+    imagePath: 'images/side_fries.png',
   ),
   Product(
     id: 15,
@@ -132,7 +131,7 @@ final List<Product> mockProducts = [
     name: '치킨 텐더',
     description: '부드러운 닭 안심살 튀김',
     price: 8000,
-    imagePath: 'assets/images/side_tender.png',
+    imagePath: 'images/side_tender.png',
   ),
   Product(
     id: 16,
@@ -140,7 +139,7 @@ final List<Product> mockProducts = [
     name: '마늘빵',
     description: '따뜻하고 향긋한 갈릭 브레드',
     price: 4000,
-    imagePath: 'assets/images/side_garlic_bread.png',
+    imagePath: 'images/side_garlic_bread.png',
   ),
   Product(
     id: 17,
@@ -148,7 +147,7 @@ final List<Product> mockProducts = [
     name: '콜라',
     description: '시원한 탄산음료',
     price: 3000,
-    imagePath: 'assets/images/drink_coke.png',
+    imagePath: 'images/drink_coke.png',
   ),
   Product(
     id: 18,
@@ -156,7 +155,7 @@ final List<Product> mockProducts = [
     name: '오렌지 주스',
     description: '신선한 오렌지 착즙 주스',
     price: 5000,
-    imagePath: 'assets/images/drink_juice.png',
+    imagePath: 'images/drink_juice.png',
   ),
   Product(
     id: 19,
@@ -164,7 +163,7 @@ final List<Product> mockProducts = [
     name: '하우스 와인 (레드)',
     description: '식사와 어울리는 레드 와인 한 잔',
     price: 8000,
-    imagePath: 'assets/images/drink_wine.png',
+    imagePath: 'images/drink_wine.png',
   ),
   Product(
     id: 20,
@@ -172,6 +171,6 @@ final List<Product> mockProducts = [
     name: '생수',
     description: '깨끗한 미네랄 워터',
     price: 1000,
-    imagePath: 'assets/images/drink_water.png',
+    imagePath: 'images/drink_water.png',
   ),
 ];

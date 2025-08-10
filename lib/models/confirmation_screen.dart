@@ -118,14 +118,16 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
   // 주문 처리 및 영수증 화면으로 이동하도록 수정
   void _processOrder(BuildContext dialogContext) {
     Navigator.of(dialogContext).pop(); // 결제창 닫기
-    widget.onOrderConfirmed(); // 메인 화면의 장바구니 비우기
 
     Navigator.pushReplacement(
       // 현재 화면을 영수증 화면으로 교체
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            ReceiptScreen(cart: widget.cart, totalPrice: _totalPrice),
+        builder: (context) => ReceiptScreen(
+          cart: widget.cart,
+          totalPrice: _totalPrice,
+          onConfirmed: widget.onOrderConfirmed,
+        ),
       ),
     );
   }

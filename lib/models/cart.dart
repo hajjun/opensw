@@ -1,4 +1,4 @@
-import 'product.dart';
+import '../screens/kiosk_screen.dart';
 
 class CartItem {
   final Product product;
